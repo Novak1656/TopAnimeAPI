@@ -8,7 +8,7 @@ from .pagination import AnimePaginationClass, GenrePaginationClass, StudioPagina
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from users_app.models import UserAnimeFavorite
 
-# Search Anime, Anime by seasons
+# Anime by seasons
 
 
 class AnimeViewSet(ModelViewSet):
@@ -32,6 +32,21 @@ class AnimeViewSet(ModelViewSet):
         if not is_created:
             return Response({'error': f"The anime '{anime.title}' is already in your favorites"})
         return Response({'success': f"Anime '{anime.title}' added to favorites"}, status=200)
+
+    @action(methods=['GET'], detail=False)
+    def search(self, request):
+        search_word = request.GET.get('search_word')
+        search_results = Anime.objects.filter(title__icontains=search_word)\
+            .select_related('studio').prefetch_related('genres')
+        if search_results.exists():
+            serialized_results = AnimeListSerializer(search_results, many=True).data
+            context = {
+                'search_word': search_word,
+                'anime_count': search_results.count(),
+                'search_results': serialized_results
+            }
+            return Response(context, status=200)
+        return Response({'search_word': search_word, 'search_results': 'Nothing was found for your query'}, status=200)
 
 
 class GenresViewSet(ModelViewSet):
