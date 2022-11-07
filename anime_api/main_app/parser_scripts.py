@@ -1,9 +1,6 @@
 import asyncio
 import aiohttp
-import asyncpg
 from bs4 import BeautifulSoup as bs
-from datetime import datetime
-from django.db import connection
 
 
 class AnimeScraper(object):
@@ -33,13 +30,14 @@ class AnimeScraper(object):
                 html_text = await response.text()
                 soup = bs(html_text, 'html.parser')
 
+                anime_info['score'] = float(none_validation(soup.find('span', attrs={'itemprop': 'ratingValue'})))
+                if anime_info.get('score') < 8.00:
+                    return
+
                 title_div = soup.find('div', class_='h1-title')
                 anime_title = title_div.find('h1', class_='title-name h1_bold_none').getText()
-
                 description = none_validation(soup.find('p', attrs={'itemprop': 'description'}))
                 anime_info['description'] = description.replace('[Written by MAL Rewrite]', '').replace('<br/>', '')
-
-                anime_info['score'] = float(none_validation(soup.find('span', attrs={'itemprop': 'ratingValue'})))
                 anime_info['type'] = none_validation(soup.find('span', attrs={'class': 'information type'}))
                 anime_info['season'] = none_validation(soup.find('span', attrs={'class': 'information season'}))
                 anime_info['studio'] = none_validation(soup.find('span', attrs={'class': 'information studio author'}))
@@ -48,9 +46,7 @@ class AnimeScraper(object):
                 anime_info['genres'] = [none_validation(item) for item in genres_items]
 
                 anime_info['image'] = soup.find('img', attrs={'alt': anime_title})['data-src']
-
-                if anime_info.get('score') >= 8.00:
-                    self.anime_data[anime_title] = anime_info
+                self.anime_data[anime_title] = anime_info
 
     # Get url for detail anime page
     async def get_detail_anime_urls_from_page(self, html_text, session):
@@ -67,10 +63,6 @@ class AnimeScraper(object):
             tasks = [self.fetch(session, url) for url in urls]
             await asyncio.gather(*tasks)
 
-
-# aniscrap = AnimeScraper(pages_count=1000)
-#
-# print(aniscrap.anime_data)
 
 class GenresScraper(object):
     def __init__(self):
@@ -92,10 +84,6 @@ class GenresScraper(object):
     async def main(self):
         async with aiohttp.ClientSession() as session:
             await self.fetch(session)
-
-
-# genscrap = GenresScraper()
-# print(genscrap.genres_data)
 
 
 class StudiosScraper(object):
@@ -120,7 +108,3 @@ class StudiosScraper(object):
     async def main(self):
         async with aiohttp.ClientSession() as session:
             await self.fetch(session)
-
-
-# studioscrap = StudiosScraper()
-# print(studioscrap.studios_data)

@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.utils.timezone import now
 
 from ...parser_scripts import AnimeScraper
-from ...models import Anime, Genre, Studio
+from ...models import Anime, Genre, Studio, Season
 
 
 class Command(BaseCommand):
@@ -22,19 +22,20 @@ class Command(BaseCommand):
             genres = Genre.objects.all()
             studios = Studio.objects.all()
             for anime_title, anime_info in anime_data.items():
-                studio = anime_info.get('studio')
-                if studio is not None:
-                    studio = studios.filter(Q(title=studio) | Q(title__icontains=studio)).first()
                 anime, created = Anime.objects.get_or_create(
                     title=anime_title,
                     description=anime_info.get('description'),
                     score=anime_info.get('score'),
                     type=anime_info.get('type'),
-                    season=anime_info.get('season'),
-                    studio=studio,
                     image=anime_info.get('image')
                 )
                 if created:
+                    studio = anime_info.get('studio')
+                    if studio is not None:
+                        anime.studio = studios.filter(Q(title=studio) | Q(title__icontains=studio)).first()
+                    season = anime_info.get('season')
+                    if season is not None:
+                        anime.season, created = Season.objects.get_or_create(title=season)
                     anime_genres = genres.filter(title__in=anime_info.get('genres'))
                     anime.genres.add(*anime_genres)
                     anime.save()

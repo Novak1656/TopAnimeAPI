@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Anime, Genre, Studio
+from .models import Anime, Genre, Studio, Season
 
 admin.site.site_title = 'AnimeAPI Admin'
 admin.site.site_header = 'AnimeAPI Admin'
 
 
-@admin.register(Genre, Studio)
+@admin.register(Genre, Studio, Season)
 class GenreStudioAdmin(admin.ModelAdmin):
     list_display = ['id', 'slug', 'title', 'created_at']
     list_display_links = ['id', 'slug']

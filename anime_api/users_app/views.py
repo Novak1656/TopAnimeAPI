@@ -35,7 +35,7 @@ class FavoriteAnimeViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Anime.objects.select_related('studio').prefetch_related('genres', 'favorites')\
+        return Anime.objects.select_related('studio', 'season').prefetch_related('genres', 'favorites')\
             .filter(favorites__user=user)
 
     def retrieve(self, request, *args, **kwargs):

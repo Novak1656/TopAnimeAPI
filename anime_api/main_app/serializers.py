@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Anime, Genre, Studio
+from .models import Anime, Genre, Studio, Season
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -14,7 +14,14 @@ class StudioSerializer(serializers.ModelSerializer):
         exclude = ['created_at']
 
 
+class SeasonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Season
+        exclude = ['created_at']
+
+
 class AnimeListSerializer(serializers.ModelSerializer):
+    season = SeasonSerializer()
     studio = StudioSerializer()
     genres = GenreSerializer(many=True)
 
@@ -25,6 +32,7 @@ class AnimeListSerializer(serializers.ModelSerializer):
 
 
 class AnimeDetailSerializer(serializers.ModelSerializer):
+    season = SeasonSerializer()
     studio = StudioSerializer()
     genres = GenreSerializer(many=True)
 
@@ -32,3 +40,6 @@ class AnimeDetailSerializer(serializers.ModelSerializer):
         model = Anime
         fields = '__all__'
         depth = 1
+
+
+

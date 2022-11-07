@@ -27,9 +27,11 @@ class Anime(models.Model):
         blank=True,
         null=True
     )
-    season = models.CharField(
+    season = models.ForeignKey(
         verbose_name='Аниме сезон',
-        max_length=255,
+        to='Season',
+        on_delete=models.PROTECT,
+        related_name='anime',
         blank=True,
         null=True
     )
@@ -96,7 +98,7 @@ class Genre(models.Model):
         super(Genre, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.title}'
+        return self.title
 
 
 class Studio(models.Model):
@@ -125,4 +127,33 @@ class Studio(models.Model):
         super(Studio, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.title}'
+        return self.title
+
+
+class Season(models.Model):
+    slug = models.SlugField(
+        verbose_name='Слаг',
+        max_length=255
+    )
+    title = models.CharField(
+        verbose_name='Название',
+        max_length=255,
+        unique=True
+    )
+    created_at = models.DateTimeField(
+        verbose_name='Дата создания',
+        auto_now_add=True
+    )
+
+    class Meta:
+        verbose_name = 'Аниме сезон'
+        verbose_name_plural = 'Аниме сезоны'
+        ordering = ['title']
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.slug = slugify(unidecode(self.title))
+        super(Season, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
